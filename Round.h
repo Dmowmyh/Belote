@@ -8,8 +8,8 @@ class Round
 public:
     Round();
     RoundResults Play(PlayerList& players, int starting_player);
-    void Deal(PlayerList& players);
 
 private:
+    void Deal(PlayerList& players);
     std::vector<Card> cards_played_;
 };

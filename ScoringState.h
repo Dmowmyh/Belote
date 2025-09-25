@@ -10,10 +10,10 @@ namespace GamePlay
 inline RoundResults Scoring(Announce announce, int team_1_points,
     int team_2_points, int valat_team, int team_that_made_the_announcement)
 {
-    //LOG("Team 1 points before : " + std::to_string(team_1_points));
-    //LOG("Team 2 points before : " + std::to_string(team_2_points));
-    //LOG("Team that made the announcement : " + std::to_string(team_that_made_the_announcement));
-    //LOG("Valat team: " + std::to_string(valat_team));
+    //DEBUG::LOG("Team 1 points before : " + std::to_string(team_1_points));
+    //DEBUG::LOG("Team 2 points before : " + std::to_string(team_2_points));
+    //DEBUG::LOG("Team that made the announcement : " + std::to_string(team_that_made_the_announcement));
+    //DEBUG::LOG("Valat team: " + std::to_string(valat_team));
     team_1_points /= 10;
     team_2_points /= 10;
 

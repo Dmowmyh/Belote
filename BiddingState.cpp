@@ -8,17 +8,14 @@ static std::mt19937 g(rd());  // seeds the random number generator
 
 std::pair<Announce, PlayerID> Bid(Announce highest_bid, PlayerID player_that_bid_highest, Player& player)
 {
-    bool last_bid_from_teammate = false;
-    player_that_bid_highest ==
-        player.GetTeammateID() ? last_bid_from_teammate = true : last_bid_from_teammate = false;
+    bool last_bid_from_teammate = (player.GetTeammateID() == last_bid_from_teammate);
 
-    std::vector<Announce>* possible_announces;
-    last_bid_from_teammate == true
-        ? possible_announces = &possible_announces_teammate[highest_bid]
-        : possible_announces = &possible_announces_nonteammate[highest_bid];
+    std::vector<Announce>& possible_announces = last_bid_from_teammate == true
+                                                    ? possible_announces_teammate[highest_bid]
+                                                    : possible_announces_nonteammate[highest_bid];
     int possible_announces_begin = 0;
     int possible_announces_end = 0;
-    possible_announces_end = possible_announces->size();
+    possible_announces_end = possible_announces.size();
 
     //TODO(Mario): For now I'm using just a brute random algorithm. But I should consider
     //using more sophisticated method for figuring which bid to make based on certain
@@ -28,7 +25,7 @@ std::pair<Announce, PlayerID> Bid(Announce highest_bid, PlayerID player_that_bid
                                             possible_announces_end - 1);
     int generated_bid_index = dist(rd);
 
-    Announce new_bid = (*possible_announces)[generated_bid_index];
+    Announce new_bid = (possible_announces)[generated_bid_index];
     //LOG("Player: " + std::to_string(player.GetID()));
     //LOG("Bid: " + std::string{AnnounceToString(new_bid)});
     if (new_bid != Announce::Pass)
@@ -61,10 +58,8 @@ std::pair<Announce, TeamID> GamePlay::Bidding(PlayerList& players, PlayerID star
         }
     } while (last_announce != highest_announce);
 
-    TeamID announce_from_team = -1;
-    (player_that_made_highest_bid == 0 || player_that_made_highest_bid == 2)
-        ? announce_from_team = TEAM_1_ID
-        : announce_from_team = TEAM_2_ID;
+    TeamID announce_from_team =
+        (player_that_made_highest_bid == 0 || player_that_made_highest_bid == 2) ? TEAM_1_ID : TEAM_2_ID;
 
     return {highest_announce, announce_from_team};
 }

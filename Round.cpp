@@ -19,6 +19,7 @@ void Round::Deal(PlayerList& players)
 
 RoundResults Round::Play(PlayerList& players, int starting_player)
 {
+    //Consider starting player and dealing clockwise or counterclockwise
     auto deck_iterator = DealEachPlayer(players, FIRST_DEAL, std::begin(deck));
     deck_iterator = DealEachPlayer(players, SECOND_DEAL, deck_iterator);
 

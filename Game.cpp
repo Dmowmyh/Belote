@@ -18,10 +18,9 @@ static std::mt19937 g(rd());  // seeds the random number generator
 int Game::Start(PlayerList& players)
 {
     T1_points = 0; T2_points = 0;
+    std::shuffle(deck.begin(), deck.end(), g);
     while (T1_points < 152 && T2_points < 152)
     {
-        std::shuffle(deck.begin(), deck.end(), g);
-
         Round round;
         auto round_results = round.Play(players, starting_player);
         starting_player++;
@@ -29,6 +28,6 @@ int Game::Start(PlayerList& players)
         T1_points += round_results.T1_points;
         T2_points += round_results.T2_points;
     }
-    std::cout << (int)T1_points << " " << (int)T2_points << std::endl;
+    //std::cout << (int)T1_points << " " << (int)T2_points << std::endl;
     return T1_points > T2_points;
 }
