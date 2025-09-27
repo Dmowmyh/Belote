@@ -1,10 +1,13 @@
 #include "Player.h"
+
 #include "Game.h"
 
-#include <iostream>
+//#include "Debug.h"
+//#include "Utility.h"
 
 int main()
 {
+    //This logic is for testing purposes only
     PlayerList players{
         Player{0, 2},
         Player{1, 3},
@@ -12,14 +15,9 @@ int main()
         Player{3, 1},
     };
     Game belot;
-    int counter = 0;
     while (true)
     {
         int winning_team = belot.Start(players);
-        if (counter % 100000 == 0)
-        {
-            std::cout << counter << std::endl;
-        }
-        counter++;
+        //DEBUG::LOG("Winning team: " + str(winning_team));
     }
 }

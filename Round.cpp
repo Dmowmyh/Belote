@@ -5,6 +5,8 @@
 #include "PlayingState.h"
 #include "ScoringState.h"
 #include "Premiums.h"
+#include <algorithm>
+#include <cstdlib>
 
 DeckIterator DealEachPlayer(PlayerList& players, int cards, DeckIterator it);
 
@@ -13,79 +15,83 @@ Round::Round()
     cards_played_.reserve(DECK_SIZE);
 }
 
+Round::~Round()
+{
+}
+
 void Round::Deal(PlayerList& players)
 {
 }
 
-RoundResults Round::Play(PlayerList& players, int starting_player)
+RoundResults Round::Play(PlayerList& players, uint8_t starting_player)
 {
     //Consider starting player and dealing clockwise or counterclockwise
+    //Does dealing direction have any significance in Belot?
     auto deck_iterator = DealEachPlayer(players, FIRST_DEAL, std::begin(deck));
     deck_iterator = DealEachPlayer(players, SECOND_DEAL, deck_iterator);
 
-    std::pair<Announce, TeamID> announce = GamePlay::Bidding(players, starting_player);
-    //LOG("Last Bid: " + std::string{AnnounceToString(announce)});
-    if (announce.first == Announce::Pass) return RoundResults{};
+    auto [announce, announcing_team] = GamePlay::Bidding(players, starting_player);
+    //DEBUG::LOG("Last Bid: " + std::string{AnnounceToString(announce)});
+    if (announce == Announce::Pass)
+    {
+        for (auto& player: players)
+        {
+            player.ClearHand();
+        }
+        return RoundResults{};
+    }
     DealEachPlayer(players, THIRD_DEAL, deck_iterator);
 
-    //TODO(Mario): Is sorting necessary?
-    for (auto& player : players)
-    {
-        player.Sort();
-        //LOG("Player: " + std::to_string(player.GetID()));
-        //PrintHand(player.GetHand());
-    }
+    //Is sorting each player's cards necessary like we sort them in real life?
+    //It makes analysing premiums easier...
+    std::ranges::for_each(players, [](auto& player)
+            {
+                //DEBUG::LOG("Player: " + std::to_string(player.GetID()));
+                //PrintHand(player.GetHand());
+                player.Sort();
+            });
 
     std::array<Hand, PLAYERS_COUNT> original_hand;
-    for (auto& player: players)
-    {
-        //std::cout << player.GetID() << std::endl;
-        original_hand.at(player.GetID()) = player.GetHand();
-        AnalyseHandForPremiums(player.GetHand());
-        //for (auto suit_cards: player.GetHand())
-        //{
-            //for (auto card: suit_cards)
-            //{
-                //DEBUG::LOG(card);
-            //}
-        //}
-        //std::cout << std::endl;
-    }
-
-    //TODO(Mario): Need to add logic for analysing premiums they can factor in
-    //bidding decision making
+    std::ranges::for_each(players, [&original_hand, announce](auto& player)
+            {
+                original_hand.at(player.GetID()) = player.GetHand();
+                //Think of a way to make this with one comparison...
+                if (announce != Announce::NoTrumps ||
+                    announce != Announce::ReDoubleNoTrump ||
+                    announce != Announce::DoubleNoTrump)
+                {
+                    AnalyseHandForPremiums(player.GetHand());
+                }
+            });
 
     //TODO(Mario): Need to add logic for analysing premiums and pass it to scoring function
     //TODO(Mario): Need to add logic for belot K/Q
-    auto round_results = GamePlay::Playing(players, starting_player, announce.first);
+    auto round_results = GamePlay::Playing(players, starting_player, announce);
 
-    //std::cout << "T1 : " << points.team_1 << std::endl;
-    //std::cout << "T2 : " << points.team_2 << std::endl;
+    //DEBUG::LOG("T1 : " + str(points.team_1));
+    //DEBUG::LOG("T2 : " + str(points.team_2));
 
-    int valat = -1;
-    if (round_results.T1_won_tricks == 0 || round_results.T2_won_tricks == 0)
-    {
-        round_results.T1_won_tricks == 0 ? valat = TEAM_1_ID : valat = TEAM_2_ID;
-    }
+    int valat = (round_results.T1_won_tricks == 0 || round_results.T2_won_tricks == 0)
+                    ? TEAM_1_ID
+                    : TEAM_2_ID;
 
-    return GamePlay::Scoring(announce.first,
+    return GamePlay::Scoring(announce,
                              round_results.T1_points,
                              round_results.T2_points,
                              valat,
-                             announce.second);
+                             announcing_team);
 }
 
 DeckIterator DealEachPlayer(PlayerList& players, int cards, DeckIterator it)
 {
-    DeckIterator it_ = it;
     for (auto& player : players)
     {
         for (size_t card = 0; card < cards; card++)
         {
-            player.OnDeal(*it_);
-            it_ = std::next(it_);
+            player.OnDeal(*it);
+            it = std::next(it);
         }
     }
-    return it_;
+    return it;
 }
 

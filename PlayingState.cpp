@@ -93,7 +93,7 @@ std::unordered_map<
 
 Card PlaySuitCard(
     Suit suit,
-    std::vector<Card>& hand,
+    std::vector<Card>& suit_cards,
     const std::function<bool(const Card& card, const Card& highest_card, Suit suit)>&
         predicate,
     const Card& highest_card)
@@ -102,20 +102,20 @@ Card PlaySuitCard(
     //id_ == -1 means no card is played
     card_played.id_ = -1;
     using Iter = std::vector<Card>::iterator;
-    for (Iter it = hand.begin(); it != hand.end(); it++)
+    for (Iter it = suit_cards.begin(); it != suit_cards.end(); it++)
     {
         if (predicate(*it, highest_card, suit))
         {
             card_played = *it;
-            hand.erase(it);
+            suit_cards.erase(it);
             return card_played;
         }
     }
 
-    if (!hand.empty())
+    if (!suit_cards.empty())
     {
-        card_played = *hand.begin();
-        hand.erase(hand.begin());
+        card_played = *suit_cards.begin();
+        suit_cards.erase(suit_cards.begin());
     }
 
     return card_played;
@@ -125,39 +125,40 @@ Card PlayOtherCard(Hand& hand)
 {
     Card card_played;
 
-    for (auto& suit_cards: hand)
+    for (std::vector<Card>& suit_cards: hand)
     {
         if (!suit_cards.empty())
         {
-            card_played = *suit_cards.begin();
-            suit_cards.erase(suit_cards.begin());
+            auto first_card = suit_cards.begin();
+            card_played = *first_card;
+            suit_cards.erase(first_card);
             return card_played;
         }
     }
 
-    //TODO(Mario): We need better randomness/choice here
+    //We need better randomness/choice here
     return card_played;
 }
 
 
-Card PlayCard(Player& player, Suit suit, Card highest_card, Announce announce)
+Card PlayCard(Player& player, Suit required_suit, Card highest_card, Announce announce)
 {
     Hand& hand = player.GetHand();
 
-    if (suit == Suit::None)
+    //No trump case
+    if (required_suit == Suit::None)
     {
-        //TODO(Mario): hand.at(0) is not correct
         return PlayOtherCard(hand);
     }
 
     Card card_played;
-    auto& suit_cards = hand.at(static_cast<int>(suit));
+    auto& suit_cards = hand.at(static_cast<int>(required_suit));
     if (!suit_cards.empty())
     {
-        card_played = PlaySuitCard(suit, suit_cards, predicates[announce], highest_card);
+        card_played = PlaySuitCard(required_suit, suit_cards, predicates[announce], highest_card);
         return card_played;
     }
-    //TODO(Mario): hand.at(0) is not correct
+
     return PlayOtherCard(hand);
 }
 
@@ -172,9 +173,12 @@ RoundResults GamePlay::Playing(std::array<Player, PLAYERS_COUNT>& players,
     Suit leading_suit = Suit::None;
     Card highest_card{};
     RoundResults round_results{};
+
     for (size_t turn = 0; turn < TURNS; turn++)
     {
         active_player = winning_player;
+        leading_suit = Suit::None;
+        highest_card = Card{};
         for (size_t player_turn = 0; player_turn < PLAYERS_COUNT; player_turn++)
         {
             Player& player = players[active_player];

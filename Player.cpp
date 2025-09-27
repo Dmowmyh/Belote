@@ -54,3 +54,11 @@ PlayerID Player::GetID()
 {
     return player_id_;
 }
+
+void Player::ClearHand()
+{
+    for (auto& suit: hand_)
+    {
+        suit.clear();
+    }
+}

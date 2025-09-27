@@ -16,6 +16,7 @@ public:
     void OnDeal(const Card& card);
     void Sort();
     Hand& GetHand();
+    void ClearHand();
     PlayerID GetTeammateID();
     PlayerID GetID();
 private:

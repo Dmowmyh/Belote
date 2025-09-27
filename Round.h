@@ -7,7 +7,8 @@ class Round
 {
 public:
     Round();
-    RoundResults Play(PlayerList& players, int starting_player);
+    ~Round();
+    RoundResults Play(PlayerList& players, uint8_t starting_player);
 
 private:
     void Deal(PlayerList& players);

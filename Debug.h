@@ -7,6 +7,7 @@
 
 namespace DEBUG
 {
+
 inline void LOG(const std::string& log)
 {
     std::cout << log << std::endl;

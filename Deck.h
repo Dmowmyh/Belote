@@ -3,6 +3,7 @@
 #include <array>
 #include <cstdint>
 #include <unordered_map>
+#include <string_view>
 
 enum class Suit {Club, Diamond, Spade, Heart, Count, None};
 enum class Rank {Seven, Eight, Nine, Ten, Jack, Queen, King, Ace, Count};
@@ -39,20 +40,50 @@ inline std::string_view RankToString(Rank rank)
 
 struct Card
 {
-    Rank rank_;
-    Suit suit_;
-    int8_t id_;
+    Rank rank_{Rank::Count};
+    Suit suit_{Suit::None};
+    int8_t id_{-1};
 };
 
 inline constexpr int DECK_SIZE = 32;
 
-enum class CardOrder
+enum CardOrder
 {
     ClubSeven = 0, ClubEight = 1, ClubNine = 2, ClubTen = 3, ClubJack = 4, ClubQueen = 5, ClubKing = 6, ClubAce = 7,
     DiamondSeven = 8, DiamondEight = 9, DiamondNine = 10, DiamondTen = 11, DiamondJack = 12, DiamondQueen = 13, DiamondKing = 14, DiamondAce = 15,
     SpadeSeven = 16, SpadeEight = 17, SpadeNine = 18, SpadeTen = 19, SpadeJack = 20, SpadeQueen = 21, SpadeKing = 22, SpadeAce = 23,
     HeartSeven = 24, HeartEight = 25, HeartNine = 26, HeartTen = 27, HeartJack = 28, HeartQueen = 29, HeartKing = 30, HeartAce = 31,
 };
+
+inline std::array<CardOrder, 4> all_jacks = {CardOrder::ClubJack,
+                                             CardOrder::DiamondJack,
+                                             CardOrder::SpadeJack,
+                                             CardOrder::HeartJack};
+
+inline std::array<CardOrder, 4> all_nines = {CardOrder::ClubNine,
+                                             CardOrder::DiamondNine,
+                                             CardOrder::SpadeNine,
+                                             CardOrder::HeartNine};
+
+inline std::array <CardOrder, 4> all_kings = {CardOrder::ClubKing,
+                                             CardOrder::DiamondKing,
+                                             CardOrder::SpadeKing,
+                                             CardOrder::HeartKing};
+
+inline std::array<CardOrder, 4> all_queens = {CardOrder::ClubQueen,
+                                              CardOrder::DiamondQueen,
+                                              CardOrder::SpadeQueen,
+                                              CardOrder::HeartQueen};
+
+inline std::array<CardOrder, 4> all_aces = {CardOrder::ClubAce,
+                                            CardOrder::DiamondAce,
+                                            CardOrder::SpadeAce,
+                                            CardOrder::HeartAce};
+
+inline std::array<CardOrder, 4> all_tens = {CardOrder::ClubTen,
+                                            CardOrder::DiamondTen,
+                                            CardOrder::SpadeTen,
+                                            CardOrder::HeartTen};
 
 using DeckIterator = std::array<Card, DECK_SIZE>::iterator;
 inline std::array<Card, DECK_SIZE> deck = {
