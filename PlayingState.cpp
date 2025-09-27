@@ -34,7 +34,7 @@ bool IsTrump(const Card& card, Announce announce)
     return false;
 }
 
-int CalculateHandPoints(const std::vector<Card>& cards, Announce announce)
+int CalculateHandPoints(const std::array<Card, PLAYERS_COUNT>& cards, Announce announce)
 {
     int points = 0;
     for (const auto& card: cards)
@@ -44,7 +44,6 @@ int CalculateHandPoints(const std::vector<Card>& cards, Announce announce)
     }
     return points;
 }
-
 
 bool Trump(const Card& card, const Card& highest_card, Suit suit)
 {
@@ -162,62 +161,80 @@ Card PlayCard(Player& player, Suit required_suit, Card highest_card, Announce an
     return PlayOtherCard(hand);
 }
 
+
+enum Team { Team1, Team2 };
+
+constexpr Team GetPlayerTeam(int player) {
+    return (player == 0 || player == 2) ? Team1 : Team2;
+}
+
+constexpr int NextPlayer(int player) {
+    return (player + 1) % PLAYERS_COUNT;
+}
+
+std::pair<int, int> PlayTrick(
+    std::array<Player, PLAYERS_COUNT>& players,
+    int starting_player,
+    Announce announce,
+    std::array<Card, PLAYERS_COUNT>& trick)
+{
+    int active_player = starting_player;
+    int winning_player = starting_player;
+    Card highest_card{};
+    Suit leading_suit = Suit::None;
+
+    for (size_t i = 0; i < PLAYERS_COUNT; ++i) {
+        Player& player = players[active_player];
+        Card card = PlayCard(player, leading_suit, highest_card, announce);
+        trick[i] = card;
+
+        if (i == 0) {
+            leading_suit = card.suit_;
+            highest_card = card;
+        } else if (card.id_ > highest_card.id_) {
+            highest_card = card;
+            winning_player = active_player;
+        }
+
+        active_player = NextPlayer(active_player);
+    }
+    // Returns winner and points
+    return {winning_player, CalculateHandPoints(trick, announce)};
+}
+
 RoundResults GamePlay::Playing(std::array<Player, PLAYERS_COUNT>& players,
                                int starting_player,
                                Announce announce)
 {
     int active_player = starting_player;
     int winning_player = starting_player;
-    std::vector<Card> current_trick;
-    current_trick.reserve(PLAYERS_COUNT);
+    std::array<Card, PLAYERS_COUNT> trick;
     Suit leading_suit = Suit::None;
     Card highest_card{};
-    RoundResults round_results{};
+    RoundResults results{};
 
     for (size_t turn = 0; turn < TURNS; turn++)
     {
-        active_player = winning_player;
-        leading_suit = Suit::None;
-        highest_card = Card{};
-        for (size_t player_turn = 0; player_turn < PLAYERS_COUNT; player_turn++)
-        {
-            Player& player = players[active_player];
-            auto card = PlayCard(player, leading_suit, highest_card, announce);
-            if (card.id_ > highest_card.id_)
-            {
-                winning_player = active_player;
-                highest_card = card;
-            }
-            if (current_trick.empty())
-            {
-                leading_suit = card.suit_;
-            }
-            current_trick.emplace_back(std::move(card));
-            active_player++;
-            if (active_player >= PLAYERS_COUNT)
-            {
-                active_player = 0;
-            }
+        auto [trick_winner, points] = PlayTrick(players, winning_player, announce, trick);
+        winning_player = trick_winner;
+        if (GetPlayerTeam(winning_player) == Team1) {
+            results.T1_points += points;
+            results.T1_won_tricks += 1;
+        } else {
+            results.T2_points += points;
+            results.T2_won_tricks += 1;
         }
-        auto points = CalculateHandPoints(current_trick, announce);
-        if (winning_player == 0 || winning_player == 2)
-        {
-            round_results.T1_points += points;
-            round_results.T1_won_tricks += 1;
-        }
-        else
-        {
-            round_results.T2_points += points;
-            round_results.T2_won_tricks += 1;
-        }
-        current_trick.clear();
     }
 
-    //Last turn awards +10 points for the winning player
-    (winning_player == 0 || winning_player == 2)
-        ? round_results.T1_points += 10
-        : round_results.T2_points += 10;
+    if (GetPlayerTeam(winning_player) == Team1)
+    {
+        results.T1_points += 10;
+    }
+    else
+    {
+        results.T2_points += 10;
+    }
 
-    return round_results;
+    return results;
 }
 
